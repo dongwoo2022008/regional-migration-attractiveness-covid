@@ -1,0 +1,23 @@
+loaded 1480 rows, 222 regions
+[A] capital->region transfer: mean R2=-0.585 (min -3.391)
+[B] consensus rank (top5): ['house_age', 'childcare_pk', 'closeness', 'doctor_per1000', 'pagerank_lag1']
+    mean pairwise Spearman across models = 0.659
+[C] ALE curves saved (robust to feature correlation; complements PDP)
+[D] SHAP direction stability: 4 feature(s) flipped sign pre->post COVID: ['biz_count', 'culture_facility_count', 'ln_pop', 'pop_density']
+[E] counterfactual scenario (MODEL SENSITIVITY, not causal):
+shock            +10%   +20%   -10%
+feature                            
+childcare_pk   -1.024 -1.842  1.151
+doctor_per1000 -0.191 -0.218  0.135
+house_age      -0.442 -0.804  0.199
+pagerank_lag1  -0.158 -0.162  0.103
+sewer_supply   -0.309 -0.108  0.630
+[F] SHAP clusters (k=4) — attractiveness regimes:
+cluster
+0        fertility, pop_density, employ_rate
+1        house_age, closeness, pagerank_lag1
+2     house_age, pagerank_lag1, sewer_supply
+3    closeness, childcare_pk, doctor_per1000
+    (map rendering optional: join f1_region_cluster_topdriver.csv to sgg geojson)
+
+DONE -> results/tables, results/figures
