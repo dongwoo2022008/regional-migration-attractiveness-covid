@@ -1,2 +1,6 @@
-rai_vs_future_net_spearman,n
-,222
+scheme,convergent_r
+SHAP,0.308
+Equal,0.312
+Entropy,0.303
+PCA,0.271
+SHAP_external_future,0.234

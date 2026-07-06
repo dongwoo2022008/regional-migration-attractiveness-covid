@@ -105,14 +105,16 @@ def D_direction(df):
     return out
 
 def E_counterfactual(df,m):
-    d=df[df.year>=2023].copy(); base=m.predict(d[FEATS]); rows=[]
+    d=df[df.year>=2023].copy(); base=m.predict(d[FEATS]); sd=df[FEATS].std(); sv=shap_cb(m,d[FEATS]); rows=[]
     for f in POLICY:
-        for pct in [0.10,0.20,-0.10]:
-            x=d[FEATS].copy(); x[f]=x[f]*(1+pct)
-            rows.append({"feature":f,"shock":f"{int(pct*100):+d}%","mean_pred_change":(m.predict(x)-base).mean()})
+        j=FEATS.index(f); direction=int(np.sign(spearmanr(d[f],sv[:,j]).correlation))
+        for k in [1.0,-1.0]:
+            x=d[FEATS].copy(); x[f]=(x[f]+k*sd[f]).clip(df[f].min(),df[f].max())
+            rows.append({"feature":f,"shock":"+1SD" if k>0 else "-1SD","shap_direction":direction,
+                         "mean_pred_change":round((m.predict(x)-base).mean(),3)})
     r=pd.DataFrame(rows); r.to_csv(f"{TAB}/e1_counterfactual_scenario.csv",index=False)
-    print("[E] counterfactual scenario (MODEL SENSITIVITY, not causal):")
-    print(r.pivot(index="feature",columns="shock",values="mean_pred_change").round(3).to_string())
+    print("[E] counterfactual (additive +/-1 SD, clipped; MODEL SENSITIVITY, NOT causal; sign may reflect per-capita confounding):")
+    print(r.to_string(index=False))
     return r
 
 def F_cluster(df,k=4):

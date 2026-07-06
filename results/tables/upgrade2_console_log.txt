@@ -4,14 +4,18 @@ loaded 1480 rows, 222 regions
     mean pairwise Spearman across models = 0.659
 [C] ALE curves saved (robust to feature correlation; complements PDP)
 [D] SHAP direction stability: 4 feature(s) flipped sign pre->post COVID: ['biz_count', 'culture_facility_count', 'ln_pop', 'pop_density']
-[E] counterfactual scenario (MODEL SENSITIVITY, not causal):
-shock            +10%   +20%   -10%
-feature                            
-childcare_pk   -1.024 -1.842  1.151
-doctor_per1000 -0.191 -0.218  0.135
-house_age      -0.442 -0.804  0.199
-pagerank_lag1  -0.158 -0.162  0.103
-sewer_supply   -0.309 -0.108  0.630
+[E] counterfactual (additive +/-1 SD, clipped; MODEL SENSITIVITY, NOT causal; sign may reflect per-capita confounding):
+       feature shock  shap_direction  mean_pred_change
+  childcare_pk  +1SD              -1            -2.066
+  childcare_pk  -1SD              -1             2.627
+doctor_per1000  +1SD              -1             0.611
+doctor_per1000  -1SD              -1             2.458
+     house_age  +1SD              -1            -1.775
+     house_age  -1SD              -1             2.199
+  sewer_supply  +1SD               1            -0.149
+  sewer_supply  -1SD               1             0.257
+ pagerank_lag1  +1SD               1             0.927
+ pagerank_lag1  -1SD               1             0.813
 [F] SHAP clusters (k=4) — attractiveness regimes:
 cluster
 0        fertility, pop_density, employ_rate

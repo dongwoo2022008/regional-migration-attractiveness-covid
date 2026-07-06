@@ -134,27 +134,31 @@ def a2_bootstrap_temporal(df,B=50):
     return ci
 
 def a3_rai(df):
-    d=df[df.year<=2022]; reg=d.groupby("region_code")
-    rai_feats=[f for f in FEATS if f not in NETWORK and f in DOMAIN]
-    Z=reg[rai_feats].mean().apply(lambda c:(c-c.mean())/c.std())
-    doms=sorted(set(DOMAIN.values()))
-    S={dm:Z[[f for f in rai_feats if DOMAIN.get(f)==dm]].mean(1) for dm in doms}
-    Sdf=pd.DataFrame(S)
-    try: w_shap=json.load(open("outputs_reference/rai_domain_weights.json"))
-    except Exception: w_shap={"Econ":.1875,"Demo":.1771,"Infra":.2901,"Serv":.3453}
-    w_shap={k:w_shap.get(k,0) for k in doms}
-    schemes={"SHAP":w_shap,"Equal":{k:1/len(doms) for k in doms},
-             "Entropy":dict(zip(doms,(lambda e:e/e.sum())(Sdf.apply(lambda c:c.std()).values)))}
-    rai={n:(Sdf*pd.Series(w)).sum(1) for n,w in schemes.items()}
-    pcs=PCA(1).fit(Sdf.fillna(0)); rai["PCA"]=pd.Series(pcs.transform(Sdf.fillna(0))[:,0],index=Sdf.index)
-    R=pd.DataFrame(rai)
-    corr=R.corr(method="spearman"); corr.to_csv(f"{TAB}/a3_rai_weight_robustness.csv")
-    print("[3] RAI weight robustness (Spearman across schemes):\n",corr.round(3).to_string())
+    W=json.load(open("outputs_reference/rai_domain_weights.json"))
+    sign=W["sign_correction"]; wpct=W["domain_weights_pct"]; w_shap={k:wpct[k]/100 for k in wpct}
+    feats=[f for f in W["features_4domain"] if f in df.columns]
+    # DMAP: Table 3-11 기준 (18개 변수 포함 — 정본 r=0.548 기준)
+    DMAP={"employ_rate":"Econ","fiscal_indep":"Econ","biz_count":"Econ",
+          "youth_ratio":"Demo","aging_ratio":"Demo","pop_density":"Demo","extinction_risk":"Demo","ln_pop":"Demo","fertility":"Demo",
+          "seoul_dist_km":"Infra","sewer_supply":"Infra","house_age":"Infra","hospital_bed":"Infra",
+          "doctor_per1000":"Serv","childcare_pk":"Serv","senior_fac_pk":"Serv","culture_facility_count":"Serv","academy_pk":"Serv"}
+    d=df[df.year<=2022]; reg=d.groupby("region_code")[feats].mean(); Z=(reg-reg.mean())/reg.std()
+    Zc=Z.mul(pd.Series({f:sign.get(f,1) for f in feats}))   # sign-corrected -> attractiveness-oriented
+    doms=["Econ","Demo","Infra","Serv"]
+    S=pd.DataFrame({dm:Zc[[f for f in feats if DMAP.get(f)==dm]].mean(1) for dm in doms})
+    net=d.groupby("region_code")[TARGET].mean().reindex(S.index)
+    schemes={"SHAP":{k:w_shap.get(k,0) for k in doms},"Equal":{k:.25 for k in doms},
+             "Entropy":dict(zip(doms,(lambda e:e/e.sum())(S.std().values)))}
+    R={n:(S*pd.Series(w)).sum(1) for n,w in schemes.items()}
+    R["PCA"]=pd.Series(PCA(1).fit_transform(S.fillna(0))[:,0],index=S.index); R=pd.DataFrame(R)
+    cv={n:round(spearmanr(R[n],net).correlation,3) for n in R}
+    R.corr(method="spearman").to_csv(f"{TAB}/a3_rai_weight_robustness.csv")
     fut=df[df.year>=2023].groupby("region_code")[TARGET].mean()
     ext=pd.concat([R["SHAP"],fut],axis=1,keys=["RAI","net_future"]).dropna()
     r=spearmanr(ext.RAI,ext.net_future).correlation
-    pd.DataFrame([{"rai_vs_future_net_spearman":r,"n":len(ext)}]).to_csv(f"{TAB}/a3_rai_external_validity.csv",index=False)
-    print(f"    external validity: RAI(<=2022) vs net migration 2023-24  Spearman r={r:.3f} (N={len(ext)})")
+    pd.DataFrame([{"scheme":n,"convergent_r":cv[n]} for n in R]+
+                 [{"scheme":"SHAP_external_future","convergent_r":round(r,3)}]).to_csv(f"{TAB}/a3_rai_external_validity.csv",index=False)
+    print("[3] RAI convergent validity (sign-corrected):",cv,"| external r=%.3f"%r)
     return R
 
 def a4_pdp_interaction(df,m):
