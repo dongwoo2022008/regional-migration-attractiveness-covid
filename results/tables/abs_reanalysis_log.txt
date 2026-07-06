@@ -1,0 +1,17 @@
+Data loaded: 1480 rows, 222 regions, years 2017-2024
+
+Train (≤2022): 1036, Test (2024): 222
+
+Absolute-count features: ['pagerank_lag1', 'closeness', 'house_age', 'childcare_pk_abs', 'pop_density', 'seoul_dist_km', 'ln_pop', 'fertility', 'doctor_per1000_abs', 'aging_ratio', 'youth_ratio', 'fiscal_indep', 'employ_rate', 'biz_count', 'sewer_supply', 'academy_pk_abs', 'culture_facility_count', 'senior_fac_pk_abs', 'hospital_bed_abs', 'extinction_risk']
+Swapped: [('childcare_pk', 'childcare_pk_abs'), ('doctor_per1000', 'doctor_per1000_abs'), ('senior_fac_pk', 'senior_fac_pk_abs'), ('academy_pk', 'academy_pk_abs'), ('hospital_bed', 'hospital_bed_abs')]
+
+Test R²:  per-capita=0.336   absolute=0.371
+
+    per_capita           absolute  dir_pc  dir_abs  rank_pc  rank_abs  flip_to_positive
+  childcare_pk   childcare_pk_abs      -1       -1        1         2                 0
+doctor_per1000 doctor_per1000_abs      -1        1        4        17                 1
+ senior_fac_pk  senior_fac_pk_abs       1        1       13        19                 0
+    academy_pk     academy_pk_abs      -1        1       17        15                 1
+  hospital_bed   hospital_bed_abs      -1       -1       10         8                 0
+
+VERDICT: per-capita confounding CONFIRMED (dir flipped to +): doctor_per1000, academy_pk

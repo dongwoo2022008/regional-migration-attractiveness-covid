@@ -1,0 +1,6 @@
+per_capita,absolute,dir_pc,dir_abs,rank_pc,rank_abs,flip_to_positive
+childcare_pk,childcare_pk_abs,-1,-1,1,2,0
+doctor_per1000,doctor_per1000_abs,-1,1,4,17,1
+senior_fac_pk,senior_fac_pk_abs,1,1,13,19,0
+academy_pk,academy_pk_abs,-1,1,17,15,1
+hospital_bed,hospital_bed_abs,-1,-1,10,8,0
