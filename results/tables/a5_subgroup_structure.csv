@@ -1,0 +1,6 @@
+group,n,top1,top2,top3,pagerank_rank
+capital,388,childcare_pk,doctor_per1000,sewer_supply,17
+non_capital,1092,house_age,pagerank_lag1,employ_rate,2
+size_small,494,house_age,pagerank_lag1,extinction_risk,2
+size_mid,493,childcare_pk,employ_rate,ln_pop,6
+size_large,493,house_age,doctor_per1000,childcare_pk,15

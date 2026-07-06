@@ -1,0 +1,22 @@
+loaded 1480 rows, 222 regions, years 2017-2024
+[baseline] CatBoost Test(2024) R2 = 0.336  (canonical ~0.29)
+[1] spatial block CV: mean R2=-0.168 (sd 0.467); random-CV ~0.29 -> spatial drop = generalization gap
+[2] SHAP bootstrap: PageRank rank median 4 (95% CI 2-10)
+    temporal stability: pre/post Spearman rho=0.247 (perm p=1.00) -> structure shifted
+[3] RAI weight robustness (Spearman across schemes):
+          SHAP  Equal  Entropy    PCA
+SHAP      NaN    NaN      NaN    NaN
+Equal     NaN  1.000    0.996  0.774
+Entropy   NaN  0.996    1.000  0.809
+PCA       NaN  0.774    0.809  1.000
+    external validity: RAI(<=2022) vs net migration 2023-24  Spearman r=nan (N=222)
+[4] PDP + interaction figures saved
+[5] subgroup determinant structure:
+       group    n         top1           top2            top3  pagerank_rank
+    capital  388 childcare_pk doctor_per1000    sewer_supply             17
+non_capital 1092    house_age  pagerank_lag1     employ_rate              2
+ size_small  494    house_age  pagerank_lag1 extinction_risk              2
+   size_mid  493 childcare_pk    employ_rate          ln_pop              6
+ size_large  493    house_age doctor_per1000    childcare_pk             15
+
+DONE -> results/tables, results/figures
