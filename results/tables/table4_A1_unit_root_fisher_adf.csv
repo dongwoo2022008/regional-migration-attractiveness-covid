@@ -1,0 +1,6 @@
+Variable,Level_Stat,Level_p,Diff_Stat,Diff_p,N_regions,Integration
+net_rate,695.86***,0.0000,1238.40***,0.0000,223,I(0)
+ln_pagerank_lag1,449.64,0.4429,1217.49***,0.0000,223,I(1)
+youth_ratio,585.31***,0.0000,804.47***,0.0000,219,I(0)
+fiscal_indep,703.26***,0.0000,1074.81***,0.0000,223,I(0)
+employ_rate,172.44,1.0000,522.82***,0.0000,148,I(1)

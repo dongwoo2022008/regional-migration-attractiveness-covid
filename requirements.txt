@@ -1,0 +1,16 @@
+# pinned to avoid the crashes seen in the sister repo:
+#   numpy>=2 breaks numba/libpysal; unpinned scipy breaks Windows BLAS (0xc06d007f)
+numpy==1.26.4
+scipy==1.13.1
+pandas>=2.0,<3
+scikit-learn
+catboost
+xgboost
+lightgbm
+shap
+optuna
+matplotlib
+seaborn
+geopandas
+openpyxl
+pyarrow
