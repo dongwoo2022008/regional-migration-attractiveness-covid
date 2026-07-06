@@ -1,0 +1,15 @@
+marker,proxy,spearman_r,p_value,sig
+childcare_pk,pop_density,0.085,0.206,
+childcare_pk,seoul_dist_km,-0.235,0.0004,***
+childcare_pk,ln_pop,0.146,0.03,*
+childcare_pk,house_age,-0.19,0.0044,**
+childcare_pk,aging_ratio,-0.18,0.0071,**
+hospital_bed,pop_density,0.056,0.4085,
+hospital_bed,seoul_dist_km,0.397,0.0,***
+hospital_bed,ln_pop,0.07,0.3015,
+hospital_bed,house_age,0.176,0.0087,**
+hospital_bed,aging_ratio,0.115,0.0877,
+house_age,pop_density,-0.603,0.0,***
+house_age,seoul_dist_km,0.461,0.0,***
+house_age,ln_pop,-0.733,0.0,***
+house_age,aging_ratio,0.857,0.0,***

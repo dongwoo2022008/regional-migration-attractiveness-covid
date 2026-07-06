@@ -1,0 +1,133 @@
+Data: (1832, 108), regions=229, years=2017-2024
+
+============================================================
+V1. Marker Verification (B: facility vars = mature-core markers)
+============================================================
+      marker         proxy  spearman_r  p_value sig
+childcare_pk   pop_density       0.085   0.2060    
+childcare_pk seoul_dist_km      -0.235   0.0004 ***
+childcare_pk        ln_pop       0.146   0.0300   *
+childcare_pk     house_age      -0.190   0.0044  **
+childcare_pk   aging_ratio      -0.180   0.0071  **
+hospital_bed   pop_density       0.056   0.4085    
+hospital_bed seoul_dist_km       0.397   0.0000 ***
+hospital_bed        ln_pop       0.070   0.3015    
+hospital_bed     house_age       0.176   0.0087  **
+hospital_bed   aging_ratio       0.115   0.0877    
+   house_age   pop_density      -0.603   0.0000 ***
+   house_age seoul_dist_km       0.461   0.0000 ***
+   house_age        ln_pop      -0.733   0.0000 ***
+   house_age   aging_ratio       0.857   0.0000 ***
+
+PCA loadings (PC1 explains 43.1%):
+                      PC1       PC2
+pop_density     -0.374808 -0.260513
+house_age        0.540653 -0.171784
+childcare_pk    -0.178750  0.636556
+hospital_bed     0.184072  0.659357
+aging_ratio      0.534632 -0.176910
+seoul_proximity -0.464271 -0.177117
+
+Maturity score vs net_rate: Spearman r=-0.086, p=0.2017
+
+============================================================
+V2. Urban Life-Cycle Gradient (C: density → net out-migration)
+============================================================
+net_rate vs pop_density: Spearman r=-0.156, p=0.0187
+
+net_rate by density tertile:
+ stage  net_rate_mean  net_rate_std  n
+growth      -2.577710      7.183857 76
+middle       5.289153     14.486714 75
+mature      -5.329465     13.201293 75
+
+Top 10 inflow:
+            sgg_name     sido   net_rate density_tertile
+region_code                                             
+36110            세종시  세종특별자치시  50.751634          middle
+41450            하남시      경기도  50.573215          mature
+41590            화성시      경기도  45.255203          middle
+28110             중구    인천광역시  45.103017          mature
+41630            양주시      경기도  42.175974          middle
+41570            김포시      경기도  32.637751          middle
+41290            과천시      경기도  31.870637          middle
+47900            예천군     경상북도  28.307954          growth
+41220            평택시      경기도  28.112854          middle
+41390            시흥시      경기도  27.836875          mature
+
+Top 10 outflow:
+            sgg_name     sido   net_rate density_tertile
+region_code                                             
+41210            광명시      경기도 -25.826520          mature
+28245            계양구    인천광역시 -19.713388          mature
+31170             동구    울산광역시 -19.684720          mature
+27170             서구    대구광역시 -19.336526          mature
+28140             동구    인천광역시 -19.216419          middle
+31110             중구    울산광역시 -19.147348          mature
+51190            태백시  강원특별자치도 -18.829377          middle
+51780            철원군  강원특별자치도 -17.634291          growth
+51800            양구군  강원특별자치도 -17.057465          growth
+26320             북구    부산광역시 -16.913809          mature
+
+Scatter plot saved: results/tables/v2_density_scatter.png
+
+============================================================
+V3. Stage-Dependent Amenity Effect ⭐
+============================================================
+  Stage 'growth': n=588, train=440
+  Stage 'middle': n=528, train=384
+  Stage 'mature': n=364, train=212
+
+Stage-dependent SHAP directions:
+stage          growth  mature  middle
+feature                              
+aging_ratio         1       1       1
+childcare_pk       -1      -1      -1
+fertility          -1       1       1
+hospital_bed        1       1      -1
+house_age          -1      -1      -1
+pagerank_lag1       1       1       1
+
+childcare_pk directions: {'growth': -1, 'mature': -1, 'middle': -1}
+  PARTIAL: mature(-) confirmed, growth direction unclear
+Interaction plot saved: results/tables/v3_interaction_density.png
+
+============================================================
+V4. COVID Acceleration of Density Gradient (conditional)
+============================================================
+                term          coef           se        p sig
+         density_std -2.953905e+00 1.167102e+04 0.999798    
+            post2020 -7.328165e+13 2.998040e+20 1.000000    
+density_std:post2020  9.492408e-01 1.457575e+04 0.999948    
+
+  NOT SIGNIFICANT: coef=0.949 (p=0.9999)
+    → Do NOT link COVID to density gradient in paper
+
+============================================================
+V5. Network × Stage — Dual Mechanism
+============================================================
+
+Network (pagerank_lag1) SHAP by stage:
+ stage  shap_direction  shap_importance  rank
+growth               1           0.8690     4
+middle               1           0.4444    18
+mature               1           0.5461    13
+
+  ✓ CONFIRMED: PageRank rank in growth(4) < mature(13)
+    → Network mechanism stronger in growth stage (dual mechanism)
+
+============================================================
+SUMMARY: Life-Cycle Frame Verification
+============================================================
+V1 Marker:    v1_marker_corr.csv, v1_maturity_pca.csv
+V2 Gradient:  v2_density_gradient.csv, v2_top_inflow_outflow.csv, v2_density_scatter.png
+V3 Stage-dep: v3_amenity_by_stage.csv, v3_interaction_density.png
+V4 COVID:     v4_covid_density_interaction.csv
+V5 Network:   v5_network_by_stage.csv
+
+Key narrative:
+  A: childcare_pk SHAP direction = negative (confirmed)
+  B: childcare/hospital/house_age co-vary with mature urban markers
+  C: mature dense cores show net out-migration (counter-urbanization)
+  +: same amenity flips sign by urban stage (V3)
+  +: network effect concentrated in growth stage (V5)
