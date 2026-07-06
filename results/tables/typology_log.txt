@@ -1,0 +1,15 @@
+[A] place-type typology (cluster means):
+         pop_density  house_age  aging_ratio  seoul_dist_km  childcare_pk  ln_pop  youth_ratio  fiscal_indep  extinction_risk  net_rate   n
+cluster                                                                                                                                    
+0            389.203     28.528       23.366        156.804        19.092  11.403       15.409        16.553            0.706    -2.099  56
+1            219.170     44.899       33.978        229.268        14.654  10.647       11.201         9.435            0.345    -2.846  63
+2           9030.499     17.253       14.717         34.905        17.107  12.878       20.926        33.421            1.490     2.983  65
+3           4321.669     22.738       17.030        294.735        15.222  12.441       18.358        22.657            1.162    -2.966  40
+[B] net_rate by density tertile (inverted-U):
+              mean   std  count
+dens_tertile                   
+low          -3.00   6.6     75
+mid           5.46  14.7     74
+high         -5.34  13.2     75
+
+DONE -> results/tables, results/figures
