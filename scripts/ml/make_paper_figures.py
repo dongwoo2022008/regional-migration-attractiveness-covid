@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 """Journal-ready figures for the spatial-heterogeneity paper (no embedded titles).
 
+Style: SciencePlots ['science','no-latex'] (falls back to serif defaults).
+Line/bar figures are exported as vector PDF + 400dpi PNG; dense scatter
+figures are raster-only (vector files would bloat with thousands of points).
+
 Outputs (results/figures/paper/):
-  fig2.png  LOWESS density-migration curve (frac=0.5, municipality means)
-  fig3.png  k-means typology on first two PCs (k=4, seed 42)
-  fig5.png  stage-wise SHAP importance of PageRank(t-1) and closeness (rank labels)
-  fig6.png  SHAP contributions vs density by development stage (4 predictors)
-  fig7.png  childcare SHAP dependence coloured by distance to Seoul
+  fig2.pdf/.png  LOWESS density-migration curve (frac=0.5, municipality means)
+  fig3.png       k-means typology on first two PCs (k=4, seed 42)
+  fig5.pdf/.png  stage-wise SHAP importance of PageRank(t-1) and closeness
+  fig6.png       SHAP contributions vs density by development stage (4 predictors)
+  fig7.png       childcare SHAP dependence coloured by distance to Seoul
 
 Run:  python scripts/ml/make_paper_figures.py --data data/track_C_2017_2024.csv
 """
@@ -20,7 +24,13 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from catboost import CatBoostRegressor, Pool
 
-plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11, "axes.linewidth": 0.8})
+try:
+    import scienceplots  # noqa: F401
+    plt.style.use(["science", "no-latex"])
+except ImportError:
+    plt.rcParams.update({"font.family": "serif",
+                         "xtick.direction": "in", "ytick.direction": "in"})
+plt.rcParams.update({"font.size": 9})
 
 FEATS = ["pagerank_lag1", "closeness", "house_age", "childcare_pk", "pop_density",
          "seoul_dist_km", "ln_pop", "fertility", "doctor_per1000", "aging_ratio",
@@ -43,6 +53,13 @@ def shap_vals(m, X):
     return m.get_feature_importance(type="ShapValues", data=Pool(X))[:, :-1]
 
 
+def save(fig, name, vector=False):
+    if vector:
+        fig.savefig(f"{OUT}/{name}.pdf")
+    fig.savefig(f"{OUT}/{name}.png", dpi=400, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default="data/track_C_2017_2024.csv")
@@ -56,15 +73,15 @@ def main():
     reg = d.groupby("region_code").mean(numeric_only=True).reset_index()
     x, y = reg["pop_density"].values, reg[TARGET].values
     lo = lowess(y, x, frac=0.5, return_sorted=True)
-    plt.figure(figsize=(7.5, 5))
-    plt.scatter(x, y, s=20, alpha=0.55, color="#7f8c8d", edgecolor="none")
-    plt.plot(lo[:, 0], lo[:, 1], color="#c0392b", lw=2.5, label="LOWESS (frac = 0.5)")
-    plt.axhline(0, color="#999999", ls="--", lw=0.9)
-    plt.xscale("log")
-    plt.xlabel("Population density (persons/km², log scale)")
-    plt.ylabel("Net migration rate (‰)")
-    plt.legend(frameon=False)
-    plt.tight_layout(); plt.savefig(f"{OUT}/fig2.png", dpi=300); plt.close()
+    fig, ax = plt.subplots(figsize=(5.2, 3.6))
+    ax.scatter(x, y, s=10, alpha=0.5, color="#666666", edgecolor="none")
+    ax.plot(lo[:, 0], lo[:, 1], lw=1.8, color="#b2182b", label="LOWESS (frac = 0.5)")
+    ax.axhline(0, color="#999999", ls="--", lw=0.7)
+    ax.set_xscale("log")
+    ax.set_xlabel("Population density (persons/km$^2$, log scale)")
+    ax.set_ylabel("Net migration rate (‰)")
+    ax.legend(frameon=False)
+    save(fig, "fig2", vector=True)
 
     # ---- Fig 3: typology PCA ----
     feats = [f for f in TYPO if f in reg.columns]
@@ -72,16 +89,16 @@ def main():
     km = KMeans(4, n_init=10, random_state=42).fit(Z)
     reg["cluster"] = km.labels_
     P = PCA(2).fit(Z); PP = P.transform(Z)
-    plt.figure(figsize=(7.5, 6))
-    sc = plt.scatter(PP[:, 0], PP[:, 1], c=reg[TARGET], cmap="RdBu", vmin=-20, vmax=20,
-                     s=34, edgecolor="k", linewidth=0.3)
+    fig, ax = plt.subplots(figsize=(5.2, 4.2))
+    sc = ax.scatter(PP[:, 0], PP[:, 1], c=reg[TARGET], cmap="RdBu", vmin=-20, vmax=20,
+                    s=26, edgecolor="k", linewidth=0.3)
     for c in sorted(reg.cluster.unique()):
         cx, cy = PP[reg.cluster == c].mean(0)
-        plt.text(cx, cy, f"C{c}", fontsize=14, fontweight="bold", ha="center", va="center")
-    plt.colorbar(sc, label="Net migration rate (‰)")
-    plt.xlabel(f"PC1 ({P.explained_variance_ratio_[0]*100:.0f}% of variance)")
-    plt.ylabel(f"PC2 ({P.explained_variance_ratio_[1]*100:.0f}% of variance)")
-    plt.tight_layout(); plt.savefig(f"{OUT}/fig3.png", dpi=300); plt.close()
+        ax.text(cx, cy, f"C{c}", fontsize=11, fontweight="bold", ha="center", va="center")
+    fig.colorbar(sc, label="Net migration rate (‰)")
+    ax.set_xlabel(f"PC1 ({P.explained_variance_ratio_[0]*100:.0f}% of variance)")
+    ax.set_ylabel(f"PC2 ({P.explained_variance_ratio_[1]*100:.0f}% of variance)")
+    save(fig, "fig3")
 
     # ---- stage assignment (lifecycle_verification logic) ----
     region_density = df.groupby("region_code")["pop_density"].mean()
@@ -96,51 +113,54 @@ def main():
         imp = np.abs(sv).mean(0); rank = (-imp).argsort().argsort() + 1
         res[st] = (imp, rank)
     pr, cl = FEATS.index("pagerank_lag1"), FEATS.index("closeness")
+    assert [int(res[s][1][pr]) for s in ["growth", "middle", "mature"]] == [4, 18, 13]
+    assert [int(res[s][1][cl]) for s in ["growth", "middle", "mature"]] == [10, 1, 8]
 
     # ---- Fig 5: stage-wise importance, two panels ----
     stages = ["Growth", "Middle", "Mature"]
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.4))
-    for ax, (idx, name) in zip(axes, [(pr, "PageRank (t−1)"), (cl, "Closeness centrality")]):
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.9))
+    for ax, (idx, name) in zip(axes, [(pr, "PageRank (t$-$1)"), (cl, "Closeness centrality")]):
         vals = [res[s][0][idx] for s in ["growth", "middle", "mature"]]
         rks = [int(res[s][1][idx]) for s in ["growth", "middle", "mature"]]
-        bars = ax.bar(stages, vals, color=["#4d4d4d", "#8c8c8c", "#bfbfbf"],
-                      edgecolor="black", linewidth=0.6)
+        bars = ax.bar(stages, vals, color=["#4d4d4d", "#8c8c8c", "#c9c9c9"],
+                      edgecolor="black", linewidth=0.5)
         for b, v, r in zip(bars, vals, rks):
-            ax.text(b.get_x() + b.get_width() / 2, v + max(vals) * 0.02, f"rank {r}",
-                    ha="center", fontsize=10)
-        ax.set_ylabel("Mean |SHAP|"); ax.set_xlabel("Development stage")
-        ax.set_title(name, fontsize=12); ax.set_ylim(0, max(vals) * 1.18)
-    plt.tight_layout(); plt.savefig(f"{OUT}/fig5.png", dpi=300); plt.close()
+            ax.text(b.get_x() + b.get_width() / 2, v + max(vals) * 0.03, f"rank {r}",
+                    ha="center", fontsize=8)
+        ax.set_ylabel("Mean $|$SHAP$|$"); ax.set_xlabel("Development stage")
+        ax.set_title(name, fontsize=9); ax.set_ylim(0, max(vals) * 1.2)
+    save(fig, "fig5", vector=True)
 
     # ---- full model for Figs 6-7 ----
     tr3 = d2[d2.year <= 2022]
     mf = fit(tr3[FEATS], tr3[TARGET]); sv = shap_vals(mf, d2[FEATS])
 
     cols = {"growth": "#2166ac", "middle": "#f4a582", "mature": "#b2182b"}
-    sel = [("pagerank_lag1", "PageRank (t−1)"), ("closeness", "Closeness centrality"),
+    sel = [("pagerank_lag1", "PageRank (t$-$1)"), ("closeness", "Closeness centrality"),
            ("childcare_pk", "Childcare facilities"), ("house_age", "Housing age")]
-    fig, axes = plt.subplots(2, 2, figsize=(11, 8))
+    fig, axes = plt.subplots(2, 2, figsize=(7.4, 5.6))
     for ax, (f, label) in zip(axes.ravel(), sel):
         j = FEATS.index(f)
         for st in ["growth", "middle", "mature"]:
             g = d2[d2.stage == st]
-            ax.scatter(g["pop_density"], sv[d2.stage.values == st, j], s=9, alpha=0.35,
+            ax.scatter(g["pop_density"], sv[d2.stage.values == st, j], s=6, alpha=0.35,
                        color=cols[st], label=st.capitalize())
-        ax.set_xscale("log"); ax.axhline(0, color="#555555", lw=0.8, ls="--")
+        ax.set_xscale("log"); ax.axhline(0, color="#555555", lw=0.6, ls="--")
         ax.set_xlabel("Population density (log scale)"); ax.set_ylabel(f"SHAP: {label}")
     h, l = axes[0, 0].get_legend_handles_labels()
-    fig.legend(h[:3], l[:3], loc="upper center", ncol=3, frameon=False, bbox_to_anchor=(0.5, 1.02))
-    plt.tight_layout(); plt.savefig(f"{OUT}/fig6.png", dpi=300, bbox_inches="tight"); plt.close()
+    fig.legend(h[:3], l[:3], loc="upper center", ncol=3, frameon=False,
+               bbox_to_anchor=(0.5, 1.04))
+    save(fig, "fig6")
 
     j = FEATS.index("childcare_pk")
-    plt.figure(figsize=(7.5, 5))
-    sc = plt.scatter(d2["childcare_pk"], sv[:, j], c=d2["seoul_dist_km"], cmap="coolwarm_r",
-                     s=14, alpha=0.8)
-    plt.colorbar(sc, label="Distance from Seoul (km)")
-    plt.axhline(0, color="#555555", lw=0.8, ls="--")
-    plt.xlabel("Childcare facilities (per 1,000 residents)")
-    plt.ylabel("SHAP contribution of childcare facilities")
-    plt.tight_layout(); plt.savefig(f"{OUT}/fig7.png", dpi=300); plt.close()
+    fig, ax = plt.subplots(figsize=(5.4, 3.7))
+    sc = ax.scatter(d2["childcare_pk"], sv[:, j], c=d2["seoul_dist_km"], cmap="coolwarm_r",
+                    s=9, alpha=0.8)
+    fig.colorbar(sc, label="Distance from Seoul (km)")
+    ax.axhline(0, color="#555555", lw=0.6, ls="--")
+    ax.set_xlabel("Childcare facilities (per 1,000 residents)")
+    ax.set_ylabel("SHAP contribution of childcare facilities")
+    save(fig, "fig7")
     print("saved figures to", OUT)
 
 
