@@ -1,0 +1,8 @@
+k,Inertia (SSE),Silhouette Coefficient,Calinski–Harabasz Index,Note
+2,1096.65,0.3766,186.11,Silhouette Calinski
+3,873.53,0.2945,144.52,Elbow
+4,740.66,0.2869,126.27,(used)
+5,628.76,0.2993,120.8,
+6,577.82,0.2585,108.52,
+7,540.8,0.2503,98.65,
+8,506.64,0.2399,91.93,
