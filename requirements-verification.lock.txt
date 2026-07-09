@@ -1,0 +1,15 @@
+# Environment in which the manuscript-reproduction checks were performed (2026-07-09).
+# In this environment: CatBoost/LightGBM/DT rows of results/tables/table4_16_ml_performance.csv
+# reproduce to 4 decimals (train 2017-2022, hold-out 2023-2024); LR/RF/GB/XGB deviate <= 0.05 R2.
+# Stage-stratified SHAP ranks (PageRank 4/18/13, closeness 10/1/8) reproduce exactly.
+# See docs/OPTUNA_REPRODUCIBILITY_NOTE.md and the note to Appendix Table A7.
+# NOTE: the top-level requirements.txt keeps numpy==1.26.4 for geopandas/numba
+# compatibility on Windows; the verification environment used numpy 2.x (Linux).
+numpy==2.2.6
+pandas==2.3.3
+scipy==1.15.3
+scikit-learn==1.7.2
+catboost==1.2.10
+xgboost==3.2.0
+lightgbm==4.6.0
+statsmodels==0.14.6
